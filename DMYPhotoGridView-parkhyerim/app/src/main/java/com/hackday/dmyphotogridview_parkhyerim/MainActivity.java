@@ -53,7 +53,7 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
     }
 
-    private void init(){
+    private void init() {
         mContext = getApplicationContext();
         mScreenWidth = getScreenWidth(mContext);
 
@@ -138,10 +138,18 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     @Override
     public void onLoadFinished(Loader<List<ExifImageData>> loader, List<ExifImageData> imageData) {
         RequestBuilder<Drawable> requestBuilder = Glide.with(this).asDrawable();
+
+        imageData = grouping(imageData);
+
         mRecyclerAdapter = new RecyclerAdapter(mContext, imageData, requestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
         RecyclerViewPreloader<ExifImageData> recyclerViewPreloader = new RecyclerViewPreloader<>(Glide.with(this), mRecyclerAdapter, mRecyclerAdapter, 3);
         mRecyclerView.addOnScrollListener(recyclerViewPreloader);
         mRecyclerView.setAdapter(mRecyclerAdapter);
+    }
+
+    private List<ExifImageData> grouping(List<ExifImageData> imageData) {
+        
+        return imageData;
     }
 
     @Override
