@@ -7,27 +7,17 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v4.content.AsyncTaskLoader;
-import android.util.Log;
 
-import com.drew.imaging.jpeg.JpegMetadataReader;
-import com.drew.metadata.Directory;
-import com.drew.metadata.Metadata;
-import com.drew.metadata.exif.ExifImageDirectory;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * Created by hyerim on 2018. 5. 17....
  */
 public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     private static final String TAG = ImageDataLoader.class.getSimpleName();
-    private static final String[] IMAGE_PROJECTION = new String[]{MediaStore.Images.Media.DATA, MediaStore.Images.ImageColumns._ID};
+    private static final String[] IMAGE_PROJECTION = new String[]{MediaStore.Images.Thumbnails.DATA, MediaStore.Images.Thumbnails._ID};
 
     private Context mContext;
     private ArrayList<ExifImageData> cached;

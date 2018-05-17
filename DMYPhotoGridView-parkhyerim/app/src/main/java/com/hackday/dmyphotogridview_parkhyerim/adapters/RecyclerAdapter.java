@@ -69,7 +69,8 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ListVi
 
         mRequestBuilder
                 .clone()
-                .apply(new RequestOptions().override(300,300).centerCrop())
+                .thumbnail(0.1f)
+                .apply(new RequestOptions().centerCrop())
                 .load(current.uri)
                 .into(viewHolder.image);
     }
@@ -100,6 +101,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ListVi
     public RequestBuilder<Drawable> getPreloadRequestBuilder(@NonNull ExifImageData item) {
         return mRequestBuilder
                 .clone()
+                .thumbnail(0.1f)
                 .apply(new RequestOptions().centerCrop())
                 .load(item.uri);
     }

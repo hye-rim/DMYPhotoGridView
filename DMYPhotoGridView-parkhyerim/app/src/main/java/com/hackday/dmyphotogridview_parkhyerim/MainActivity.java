@@ -35,7 +35,6 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<ArrayList<ExifImageData>> {
@@ -74,7 +73,8 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
         checkPermission();
 
-        Glide.get(this).setMemoryCategory(MemoryCategory.HIGH);
+//        Glide.get(this).setMemoryCategory(MemoryCategory.HIGH);
+        Glide.get(this);
         getSupportLoaderManager().initLoader(R.id.loader_id_media_store_data, null, this);
 
         setPinch();
@@ -150,11 +150,11 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     public void onLoadFinished(Loader<ArrayList<ExifImageData>> loader, ArrayList<ExifImageData> imageData) {
         RequestBuilder<Drawable> requestBuilder = Glide.with(this).asDrawable();
 
-        for(ExifImageData image : imageData){
-            Date date = extractExifDateTime(image.path);
-            image.dateTime = String.valueOf(date);
-            image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
-        }
+//        for(ExifImageData image : imageData){
+//            Date date = extractExifDateTime(image.path);
+//            image.dateTime = String.valueOf(date);
+//            image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
+//        }
 
         imageData = grouping(imageData);
 
