@@ -11,6 +11,7 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Display;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
@@ -38,10 +39,9 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
     private int mScreenWidth;
     private int mNowRowCountIndex = 0;
+    private boolean isChangeRowCnt = false;
 
-    //exif test
-    private TextView mExifTextView;
-    private ImageView mExifImageView;
+    private ScaleGestureDetector mScaleGestureDetector;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,13 +49,8 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         setContentView(R.layout.activity_main);
         init();
 
-        //TODO : imageData class
-        //TODO : load image
-        //TODO : image list sorting
         //TODO : grouping
-        //TODO : pinch zoom
 
-//        getLoadImage();
     }
 
     private void init(){
@@ -68,13 +63,62 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         mRecyclerView.setHasFixedSize(true);
 
         checkPermission();
+
         Glide.get(this).setMemoryCategory(MemoryCategory.HIGH);
         getSupportLoaderManager().initLoader(R.id.loader_id_media_store_data, null, this);
+
+        setPinch();
     }
 
     @Override
     protected void onPermissionGranted() {
         super.onPermissionGranted();
+    }
+
+    private void setPinch() {
+        mScaleGestureDetector = new ScaleGestureDetector(this, new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override
+            public boolean onScale(ScaleGestureDetector detector) {
+                if (detector.getCurrentSpan() > 200 && detector.getTimeDelta() > 200) {
+                    if (detector.getCurrentSpan() - detector.getPreviousSpan() < -1) {
+                        if (mNowRowCountIndex > 0) {
+                            isChangeRowCnt = true;
+                            mNowRowCountIndex--;
+                            mLayoutManager = new GridLayoutManager(mContext, ROW_COUNT[mNowRowCountIndex]);
+                            mRecyclerView.setLayoutManager(mLayoutManager);
+                            isChangeRowCnt = true;
+                            return true;
+                        }
+                    } else if (detector.getCurrentSpan() - detector.getPreviousSpan() > 1) {
+                        if (mNowRowCountIndex < 2) {
+                            isChangeRowCnt = true;
+                            mNowRowCountIndex++;
+                            mLayoutManager = new GridLayoutManager(mContext, ROW_COUNT[mNowRowCountIndex]);
+                            mRecyclerView.setLayoutManager(mLayoutManager);
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        });
+
+        mRecyclerView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+
+                mScaleGestureDetector.onTouchEvent(event);
+//                    v.getLayoutParams().width = mScreenWidth / ROW_COUNT[mNowRowCountIndex];
+
+                return false;
+            }
+        });
+
+        if (isChangeRowCnt) {
+            getSupportLoaderManager().restartLoader(R.id.loader_id_media_store_data, null, this);
+            isChangeRowCnt = false;
+        }
+
     }
 
     @SuppressWarnings("deprecation")
