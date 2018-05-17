@@ -3,11 +3,10 @@ package com.hackday.dmyphotogridview_parkhyerim;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
+import android.media.ExifInterface;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Display;
@@ -15,14 +14,12 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.MemoryCategory;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader;
 import com.bumptech.glide.util.Preconditions;
+import com.codewaves.stickyheadergrid.StickyHeaderGridLayoutManager;
 import com.drew.imaging.jpeg.JpegMetadataReader;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
@@ -35,7 +32,9 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<ArrayList<ExifImageData>> {
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -43,23 +42,32 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
     private Context mContext;
     private RecyclerView mRecyclerView;
-    private GridLayoutManager mLayoutManager;
+    private StickyHeaderGridLayoutManager mGridLayoutManager;
+    //    private GridLayoutManager mLayoutManager;
     private RecyclerAdapter mRecyclerAdapter;
+    RequestBuilder<Drawable> mRequestBuilder;
+
+    private ScaleGestureDetector mScaleGestureDetector;
 
     private int mScreenWidth;
     private int mNowRowCountIndex = 0;
     private boolean isChangeRowCnt = false;
 
-    private ScaleGestureDetector mScaleGestureDetector;
+
+    private Map<String, ArrayList<ExifImageData>> dailyGroup = new HashMap<String, ArrayList<ExifImageData>>();
+    private Map<String, ArrayList<ExifImageData>> monthlyGroup = new HashMap<String, ArrayList<ExifImageData>>();
+    private Map<String, ArrayList<ExifImageData>> yearGroup = new HashMap<String, ArrayList<ExifImageData>>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        checkPermission();
+
         init();
 
         //TODO : grouping
-
     }
 
     private void init() {
@@ -67,16 +75,14 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         mScreenWidth = getScreenWidth(mContext);
 
         mRecyclerView = (RecyclerView) findViewById(R.id.main_recycler_view);
-        mLayoutManager = new GridLayoutManager(mContext, ROW_COUNT[mNowRowCountIndex]);
-        mRecyclerView.setLayoutManager(mLayoutManager);
+        mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
+        mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_size));
+
+        mRecyclerView.setLayoutManager(mGridLayoutManager);
         mRecyclerView.setHasFixedSize(true);
 
-        checkPermission();
-
-//        Glide.get(this).setMemoryCategory(MemoryCategory.HIGH);
         Glide.get(this);
         getSupportLoaderManager().initLoader(R.id.loader_id_media_store_data, null, this);
-
         setPinch();
     }
 
@@ -94,8 +100,10 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
                         if (mNowRowCountIndex > 0) {
                             isChangeRowCnt = true;
                             mNowRowCountIndex--;
-                            mLayoutManager = new GridLayoutManager(mContext, ROW_COUNT[mNowRowCountIndex]);
-                            mRecyclerView.setLayoutManager(mLayoutManager);
+                            mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
+                            mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_size));
+                            mRecyclerView.setLayoutManager(mGridLayoutManager);
+                            updateAdapter();
                             isChangeRowCnt = true;
                             return true;
                         }
@@ -103,8 +111,11 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
                         if (mNowRowCountIndex < 2) {
                             isChangeRowCnt = true;
                             mNowRowCountIndex++;
-                            mLayoutManager = new GridLayoutManager(mContext, ROW_COUNT[mNowRowCountIndex]);
-                            mRecyclerView.setLayoutManager(mLayoutManager);
+                            mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
+                            mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_size));
+                            mRecyclerView.setLayoutManager(mGridLayoutManager);
+                            updateAdapter();
+                            isChangeRowCnt = true;
                             return true;
                         }
                     }
@@ -118,8 +129,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
             public boolean onTouch(View v, MotionEvent event) {
 
                 mScaleGestureDetector.onTouchEvent(event);
-//                v.getRootView().
-////                v.getLayoutParams().width = mScreenWidth / ROW_COUNT[mNowRowCountIndex];
 
                 return false;
             }
@@ -148,26 +157,72 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<ArrayList<ExifImageData>> loader, ArrayList<ExifImageData> imageData) {
-        RequestBuilder<Drawable> requestBuilder = Glide.with(this).asDrawable();
+        grouping(imageData);
 
-//        for(ExifImageData image : imageData){
-//            Date date = extractExifDateTime(image.path);
-//            image.dateTime = String.valueOf(date);
-//            image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
-//        }
+        updateAdapter();
+    }
 
-        imageData = grouping(imageData);
+    private void updateAdapter() {
+        mRequestBuilder = Glide.with(this).asDrawable();
 
-        mRecyclerAdapter = new RecyclerAdapter(mContext, imageData, requestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
-        RecyclerViewPreloader<ExifImageData> recyclerViewPreloader = new RecyclerViewPreloader<>(Glide.with(this), mRecyclerAdapter, mRecyclerAdapter, 3);
-        mRecyclerView.addOnScrollListener(recyclerViewPreloader);
+        if (mNowRowCountIndex == 0) {
+            mRecyclerAdapter = new RecyclerAdapter(mContext, dailyGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
+        } else if (mNowRowCountIndex == 1) {
+            mRecyclerAdapter = new RecyclerAdapter(mContext, monthlyGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
+        } else {
+            mRecyclerAdapter = new RecyclerAdapter(mContext, yearGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
+        }
+
+//        RecyclerViewPreloader<ExifImageData> recyclerViewPreloader = new RecyclerViewPreloader<>(Glide.with(this), mRecyclerAdapter, mRecyclerAdapter, 3);
+//        mRecyclerView.addOnScrollListener(recyclerViewPreloader);
         mRecyclerView.setAdapter(mRecyclerAdapter);
     }
 
+
     private ArrayList<ExifImageData> grouping(ArrayList<ExifImageData> imageData) {
+        for (ExifImageData image : imageData) {
+            Date date = extractExifDateTime(image.path);
+            image.dateTime = String.valueOf(date);
+            image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
+        }
+
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
         SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy년 MM월", Locale.KOREAN);
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy년", Locale.KOREAN);
+
+        for (ExifImageData image : imageData) {
+            String nowDate = dateFormat.format(image.dateTime);
+            if (dailyGroup.containsKey(nowDate)) {
+                dailyGroup.get(nowDate).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                dailyGroup.put(nowDate, imageList);
+            }
+        }
+
+        for (ExifImageData image : imageData) {
+            String nowDate = monthFormat.format(image.dateTime);
+            if (monthlyGroup.containsKey(nowDate)) {
+                monthlyGroup.get(nowDate).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                monthlyGroup.put(nowDate, imageList);
+            }
+        }
+
+
+        for (ExifImageData image : imageData) {
+            String nowDate = yearFormat.format(image.dateTime);
+            if (yearGroup.containsKey(nowDate)) {
+                yearGroup.get(nowDate).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                yearGroup.put(nowDate, imageList);
+            }
+        }
 
         return imageData;
     }
@@ -183,9 +238,9 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         try {
             Metadata metadata = JpegMetadataReader.readMetadata(new File(imagePath));
             // these are listed in order of preference
-            int[] datetimeTags = new int[] { ExifImageDirectory.TAG_DATETIME_ORIGINAL,
+            int[] datetimeTags = new int[]{ExifImageDirectory.TAG_DATETIME_ORIGINAL,
                     ExifImageDirectory.TAG_DATETIME,
-                    ExifImageDirectory.TAG_DATETIME_DIGITIZED };
+                    ExifImageDirectory.TAG_DATETIME_DIGITIZED};
 
             for (Directory directory : metadata.getDirectories()) {
                 for (int tag : datetimeTags) {

@@ -67,10 +67,9 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
         unregisterContentObserver();
     }
 
-    @SuppressLint("RestrictedApi")
     @Override
     public ArrayList<ExifImageData> loadInBackground() {
-        ArrayList<ExifImageData> imageList = loadImages(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0] );
+        ArrayList<ExifImageData> imageList = loadImages(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0]);
 
 //        Collections.sort(imageList, new Comparator<ExifImageData>() {
 //            @Override
@@ -86,7 +85,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     private ArrayList<ExifImageData> loadImages(Uri contentUri, String[] projection, String orderBy, String idCol, String dataCol) {
         final ArrayList<ExifImageData> data = new ArrayList<ExifImageData>();
 
-        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC" + " LIMIT 1000");
+        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, null);//orderBy + " DESC"
 
         if (cursor == null) {
             return data;
@@ -95,11 +94,14 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
         try {
             final int idColNum = cursor.getColumnIndexOrThrow(idCol);
             final int dataColNum = cursor.getColumnIndexOrThrow(dataCol);
-
+            int i = 0;
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(idColNum);
                 String path = cursor.getString(dataColNum);
                 data.add(new ExifImageData(id, Uri.withAppendedPath(contentUri, Long.toString(id)), path));
+                if (i >= 100) {
+                    break;
+                }
             }
         } finally {
             cursor.close();
@@ -111,8 +113,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     private void registerContentObserver() {
         if (!observerRegistered) {
             ContentResolver cr = getContext().getContentResolver();
-            cr.registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false,
-                    forceLoadContentObserver);
+            cr.registerContentObserver(MediaStore.Images.Thumbnails.EXTERNAL_CONTENT_URI, false, forceLoadContentObserver);
 
             observerRegistered = true;
         }
