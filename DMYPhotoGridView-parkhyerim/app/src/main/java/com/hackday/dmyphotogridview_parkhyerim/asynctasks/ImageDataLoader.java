@@ -1,15 +1,19 @@
 package com.hackday.dmyphotogridview_parkhyerim.asynctasks;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.media.ExifInterface;
 import android.support.v4.content.AsyncTaskLoader;
+import android.util.Log;
 
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
+import java.io.IOException;
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,16 +23,17 @@ import java.util.List;
  * Created by hyerim on 2018. 5. 17....
  */
 public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
-    private static final String[] IMAGE_PROJECTION =
-            new String[]{MediaStore.Images.ImageColumns.DATE_TAKEN, MediaStore.Images.ImageColumns._ID};
-//                    ExifInterface.TAG_DATETIME, ExifInterface.TAG_DATETIME_ORIGINAL, ExifInterface.TAG_DATETIME_DIGITIZED};
+    private static final String TAG = ImageDataLoader.class.getSimpleName();
+    private static final String[] IMAGE_PROJECTION = new String[]{MediaStore.Images.Media.DATA, MediaStore.Images.ImageColumns._ID};
 
+    private Context mContext;
     private List<ExifImageData> cached;
     private boolean observerRegistered = false;
     private final ForceLoadContentObserver forceLoadContentObserver = new ForceLoadContentObserver();
 
     public ImageDataLoader(Context context) {
         super(context);
+        mContext = context;
     }
 
     @Override
@@ -69,29 +74,46 @@ public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
         unregisterContentObserver();
     }
 
+    @SuppressLint("RestrictedApi")
     @Override
     public List<ExifImageData> loadInBackground() {
-        List<ExifImageData> data = queryImages();
-        Collections.sort(data, new Comparator<ExifImageData>() {
-            @Override
-            public int compare(ExifImageData mediaStoreData, ExifImageData mediaStoreData2) {
-                return Long.valueOf(mediaStoreData2.dateTimeLong).compareTo(mediaStoreData.dateTimeLong);
-            }
-        });
-        return data;
+        List<ExifImageData> imageList = loadImages();
+
+//        for (ExifImageData image : imageList) {
+//            try {
+//                ExifInterface exifInterface = new ExifInterface(image.path);
+//
+//                if (exifInterface != null) {
+//                    image.dateTime = exifInterface.getAttribute(ExifInterface.TAG_DATETIME);
+//                    image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
+//                    image.year = Integer.parseInt(image.dateTimeNum.substring(0, 4));
+//                    image.month = Integer.parseInt(image.dateTimeNum.substring(5, 6));
+//                    image.day = Integer.parseInt(image.dateTimeNum.substring(7, 8));
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//        }
+
+//        Collections.sort(imageList, new Comparator<ExifImageData>() {
+//            @Override
+//            public int compare(ExifImageData mediaStoreData, ExifImageData mediaStoreData2) {
+//                return Long.valueOf(mediaStoreData2.dateTime).compareTo(Long.valueOf(mediaStoreData.dateTime));
+//            }
+//        });
+
+        return imageList;
     }
 
-    private List<ExifImageData> queryImages() {
-        return query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.ImageColumns.DATE_TAKEN,
-                MediaStore.Images.ImageColumns._ID, ExifInterface.TAG_DATETIME, ExifInterface.TAG_DATETIME_ORIGINAL, ExifInterface.TAG_DATETIME_DIGITIZED);
+    private List<ExifImageData> loadImages() {
+        return load(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0] );
     }
 
-    private List<ExifImageData> query(Uri contentUri, String[] projection, String sortByCol, String idCol, String dateTimeCol, String dateTimeOriginalCol, String dateTimeDigitizedCol) {
+    private List<ExifImageData> load(Uri contentUri, String[] projection, String orderBy, String idCol, String dataCol) {
         final List<ExifImageData> data = new ArrayList<ExifImageData>();
 
-//        String tempDateTimeLong = dateTimeCol.replaceAll("[^0-9]", "");
-
-        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, sortByCol + " DESC");
+        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC");
 
         if (cursor == null) {
             return data;
@@ -99,22 +121,13 @@ public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
 
         try {
             final int idColNum = cursor.getColumnIndexOrThrow(idCol);
-            final int dateTimeColNum = cursor.getColumnIndexOrThrow(dateTimeCol);
-            final int dateTimeOriginalColNum = cursor.getColumnIndexOrThrow(dateTimeOriginalCol);
-            final int dateTimeDigitizedColNum = cursor.getColumnIndexOrThrow(dateTimeDigitizedCol);
+            final int dataColNum = cursor.getColumnIndexOrThrow(dataCol);
 
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(idColNum);
-                String dateTime = cursor.getString(dateTimeColNum);
-                String dateTimeOriginal = cursor.getString(dateTimeOriginalColNum);
-                String dateTimeDigitized = cursor.getString(dateTimeDigitizedColNum);
-                int year = Integer.parseInt(dateTime.substring(0, 3));
-                int month = Integer.parseInt(dateTime.substring(5, 6));
-                int day = Integer.parseInt(dateTime.substring(8, 9));
-                long dateTimeLong = Long.parseLong(dateTime.replaceAll("[^0-9]", ""));
+                String path = cursor.getString(dataColNum);
 
-                data.add(new ExifImageData(id, Uri.withAppendedPath(contentUri, Long.toString(id)),
-                        dateTime, dateTimeOriginal, dateTimeDigitized, dateTimeLong, year, month, day));
+                data.add(new ExifImageData(id, Uri.withAppendedPath(contentUri, Long.toString(id)), path));
             }
         } finally {
             cursor.close();

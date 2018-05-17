@@ -27,21 +27,24 @@ public class ExifImageData implements Parcelable {
 
     public final long rowId;
     public final Uri uri;
-    public final String dateTime; //2018:05:23 10:15
-    public final String dateTimeOriginal;
-    public final String dateTimeDigitized;
-    public long dateTimeLong; //201805231015
+    public String dateTime; //2018:05:23 10:15
+    public String dateTimeNum; //201805231015
     public int year; //2018
     public int month; //5
     public int day; //23
+    public String path;
 
-    public ExifImageData(long rowId, Uri uri, String dateTime, String dateTimeOriginal, String dateTimeDigitized, long dateTimeLong, int year, int month, int day) {
+    public ExifImageData(long rowId, Uri uri, String path) {
+        this.rowId = rowId;
+        this.uri = uri;
+        this.path = path;
+    }
+
+    public ExifImageData(long rowId, Uri uri, String dateTime, String dateTimeNum, int year, int month, int day) {
         this.rowId = rowId;
         this.uri = uri;
         this.dateTime = dateTime;
-        this.dateTimeDigitized = dateTimeDigitized;
-        this.dateTimeOriginal = dateTimeOriginal;
-        this.dateTimeLong = dateTimeLong;
+        this.dateTimeNum = dateTimeNum;
         this.year = year;
         this.month = month;
         this.day = day;
@@ -51,12 +54,11 @@ public class ExifImageData implements Parcelable {
         rowId = in.readLong();
         uri = Uri.parse(in.readString());
         dateTime = in.readString();
-        dateTimeOriginal = in.readString();
-        dateTimeDigitized = in.readString();
-        dateTimeLong = in.readLong();
+        dateTimeNum = in.readString();
         year = in.readInt();
         month = in.readInt();
         day = in.readInt();
+        path = in.readString();
     }
 
     @Override
@@ -64,12 +66,11 @@ public class ExifImageData implements Parcelable {
         parcel.writeLong(rowId);
         parcel.writeString(uri.toString());
         parcel.writeString(dateTime);
-        parcel.writeString(dateTimeOriginal);
-        parcel.writeString(dateTimeDigitized);
-        parcel.writeLong(dateTimeLong);
+        parcel.writeString(dateTimeNum);
         parcel.writeInt(year);
         parcel.writeInt(month);
         parcel.writeInt(day);
+        parcel.writeString(path);
     }
 
     @Override
@@ -77,12 +78,11 @@ public class ExifImageData implements Parcelable {
         return "ExifImageData{" +
                 "uri=" + uri +
                 ", dateTime='" + dateTime + '\'' +
-                ", dateTimeOriginal='" + dateTimeOriginal + '\'' +
-                ", dateTimeDigitized='" + dateTimeDigitized + '\'' +
-                ", dateTimeLong=" + dateTimeLong +
+                ", dateTimeNum=" + dateTimeNum +
                 ", year=" + year +
                 ", month=" + month +
                 ", day=" + day +
+                ", path=" + path +
                 '}';
     }
 }
