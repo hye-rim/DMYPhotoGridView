@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -22,15 +23,22 @@ import com.bumptech.glide.MemoryCategory;
 import com.bumptech.glide.RequestBuilder;
 import com.bumptech.glide.integration.recyclerview.RecyclerViewPreloader;
 import com.bumptech.glide.util.Preconditions;
+import com.drew.imaging.jpeg.JpegMetadataReader;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifImageDirectory;
 import com.hackday.dmyphotogridview_parkhyerim.adapters.RecyclerAdapter;
 import com.hackday.dmyphotogridview_parkhyerim.asynctasks.ImageDataLoader;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class MainActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<List<ExifImageData>> {
+public class MainActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<ArrayList<ExifImageData>> {
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static int[] ROW_COUNT = {3, 5, 7};
 
@@ -134,13 +142,19 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     }
 
     @Override
-    public Loader<List<ExifImageData>> onCreateLoader(int i, Bundle bundle) {
+    public Loader<ArrayList<ExifImageData>> onCreateLoader(int i, Bundle bundle) {
         return new ImageDataLoader(mContext);
     }
 
     @Override
-    public void onLoadFinished(Loader<List<ExifImageData>> loader, List<ExifImageData> imageData) {
+    public void onLoadFinished(Loader<ArrayList<ExifImageData>> loader, ArrayList<ExifImageData> imageData) {
         RequestBuilder<Drawable> requestBuilder = Glide.with(this).asDrawable();
+
+        for(ExifImageData image : imageData){
+            Date date = extractExifDateTime(image.path);
+            image.dateTime = String.valueOf(date);
+            image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
+        }
 
         imageData = grouping(imageData);
 
@@ -150,7 +164,7 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         mRecyclerView.setAdapter(mRecyclerAdapter);
     }
 
-    private List<ExifImageData> grouping(List<ExifImageData> imageData) {
+    private ArrayList<ExifImageData> grouping(ArrayList<ExifImageData> imageData) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
         SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy년 MM월", Locale.KOREAN);
         SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy년", Locale.KOREAN);
@@ -159,8 +173,35 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     }
 
     @Override
-    public void onLoaderReset(Loader<List<ExifImageData>> loader) {
+    public void onLoaderReset(Loader<ArrayList<ExifImageData>> loader) {
 
+    }
+
+    private Date extractExifDateTime(String imagePath) {
+//        Log.d("exif", "Attempting to extract EXIF date/time from image at " + imagePath);
+        Date datetime = new Date(0); // or initialize to null, if you prefer
+        try {
+            Metadata metadata = JpegMetadataReader.readMetadata(new File(imagePath));
+            // these are listed in order of preference
+            int[] datetimeTags = new int[] { ExifImageDirectory.TAG_DATETIME_ORIGINAL,
+                    ExifImageDirectory.TAG_DATETIME,
+                    ExifImageDirectory.TAG_DATETIME_DIGITIZED };
+
+            for (Directory directory : metadata.getDirectories()) {
+                for (int tag : datetimeTags) {
+                    if (directory.containsTag(tag)) {
+//                        Log.d("exif", "Using tag " + directory.getTagName(tag) + " for timestamp");
+                        SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
+                        datetime = exifDatetimeFormat.parse(directory.getString(tag));
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.w("exif", "Unable to extract EXIF metadata from image at " + imagePath, e);
+        }
+
+        return datetime;
     }
 
 }

@@ -7,21 +7,30 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.v4.content.AsyncTaskLoader;
+import android.util.Log;
 
+import com.drew.imaging.jpeg.JpegMetadataReader;
+import com.drew.metadata.Directory;
+import com.drew.metadata.Metadata;
+import com.drew.metadata.exif.ExifImageDirectory;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by hyerim on 2018. 5. 17....
  */
-public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
+public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     private static final String TAG = ImageDataLoader.class.getSimpleName();
     private static final String[] IMAGE_PROJECTION = new String[]{MediaStore.Images.Media.DATA, MediaStore.Images.ImageColumns._ID};
 
     private Context mContext;
-    private List<ExifImageData> cached;
+    private ArrayList<ExifImageData> cached;
     private boolean observerRegistered = false;
     private final ForceLoadContentObserver forceLoadContentObserver = new ForceLoadContentObserver();
 
@@ -31,7 +40,7 @@ public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
     }
 
     @Override
-    public void deliverResult(List<ExifImageData> data) {
+    public void deliverResult(ArrayList<ExifImageData> data) {
         if (!isReset() && isStarted()) {
             super.deliverResult(data);
         }
@@ -70,25 +79,8 @@ public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
 
     @SuppressLint("RestrictedApi")
     @Override
-    public List<ExifImageData> loadInBackground() {
-        List<ExifImageData> imageList = loadImages(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0] );
-
-//        for (ExifImageData image : imageList) {
-//            try {
-//                ExifInterface exifInterface = new ExifInterface(image.path);
-//
-//                if (exifInterface != null) {
-//                    image.dateTime = exifInterface.getAttribute(ExifInterface.TAG_DATETIME);
-//                    image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
-//                    image.year = Integer.parseInt(image.dateTimeNum.substring(0, 4));
-//                    image.month = Integer.parseInt(image.dateTimeNum.substring(5, 6));
-//                    image.day = Integer.parseInt(image.dateTimeNum.substring(7, 8));
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//
-//        }
+    public ArrayList<ExifImageData> loadInBackground() {
+        ArrayList<ExifImageData> imageList = loadImages(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0] );
 
 //        Collections.sort(imageList, new Comparator<ExifImageData>() {
 //            @Override
@@ -101,10 +93,10 @@ public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
     }
 
 
-    private List<ExifImageData> loadImages(Uri contentUri, String[] projection, String orderBy, String idCol, String dataCol) {
-        final List<ExifImageData> data = new ArrayList<ExifImageData>();
+    private ArrayList<ExifImageData> loadImages(Uri contentUri, String[] projection, String orderBy, String idCol, String dataCol) {
+        final ArrayList<ExifImageData> data = new ArrayList<ExifImageData>();
 
-        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC" + " LIMIT 200");
+        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC" + " LIMIT 1000");
 
         if (cursor == null) {
             return data;
@@ -117,7 +109,6 @@ public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(idColNum);
                 String path = cursor.getString(dataColNum);
-
                 data.add(new ExifImageData(id, Uri.withAppendedPath(contentUri, Long.toString(id)), path));
             }
         } finally {

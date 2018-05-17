@@ -17,6 +17,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.hackday.dmyphotogridview_parkhyerim.R;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -24,14 +25,14 @@ import java.util.List;
  * Created by hyerim on 2018. 5. 17....
  */
 public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ListViewHolder> implements ListPreloader.PreloadSizeProvider<ExifImageData>, ListPreloader.PreloadModelProvider<ExifImageData> {
-    private final List<ExifImageData> mData;
+    private final ArrayList<ExifImageData> mData;
     private final RequestBuilder<Drawable> mRequestBuilder;
 
     private Context mContext;
     private int[] mActualDimensions;
     private int mScreenWidth;
 
-    public RecyclerAdapter(Context context, List<ExifImageData> data, RequestBuilder<Drawable> glideRequests, int screenWidth) {
+    public RecyclerAdapter(Context context, ArrayList<ExifImageData> data, RequestBuilder<Drawable> glideRequests, int screenWidth) {
         mContext = context;
         mData = data;
         mRequestBuilder = glideRequests;
@@ -85,7 +86,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ListVi
 
     @Override
     public int getItemViewType(int position) {
-        return 0;
+        return position;
     }
 
     @NonNull
