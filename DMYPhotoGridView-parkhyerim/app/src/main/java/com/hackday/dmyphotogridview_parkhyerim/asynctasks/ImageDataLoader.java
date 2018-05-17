@@ -6,17 +6,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
-import android.support.media.ExifInterface;
 import android.support.v4.content.AsyncTaskLoader;
-import android.util.Log;
 
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
-import java.io.IOException;
-import java.sql.Date;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -77,7 +71,7 @@ public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
     @SuppressLint("RestrictedApi")
     @Override
     public List<ExifImageData> loadInBackground() {
-        List<ExifImageData> imageList = loadImages();
+        List<ExifImageData> imageList = loadImages(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0] );
 
 //        for (ExifImageData image : imageList) {
 //            try {
@@ -106,14 +100,11 @@ public class ImageDataLoader extends AsyncTaskLoader<List<ExifImageData>> {
         return imageList;
     }
 
-    private List<ExifImageData> loadImages() {
-        return load(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0] );
-    }
 
-    private List<ExifImageData> load(Uri contentUri, String[] projection, String orderBy, String idCol, String dataCol) {
+    private List<ExifImageData> loadImages(Uri contentUri, String[] projection, String orderBy, String idCol, String dataCol) {
         final List<ExifImageData> data = new ArrayList<ExifImageData>();
 
-        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC");
+        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC" + " LIMIT 200");
 
         if (cursor == null) {
             return data;

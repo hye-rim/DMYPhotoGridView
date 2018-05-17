@@ -51,7 +51,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ListVi
                 @Override
                 public boolean onPreDraw() {
                     if (mActualDimensions == null) {
-                        mActualDimensions = new int[]{view.getWidth(), view.getHeight()};
+                        mActualDimensions = new int[]{view.getWidth(), view.getWidth()};
                     }
                     view.getViewTreeObserver().removeOnPreDrawListener(this);
                     return true;
@@ -68,7 +68,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ListVi
 
         mRequestBuilder
                 .clone()
-                .apply(new RequestOptions().override(300, 300).centerCrop())
+                .apply(new RequestOptions().override(300,300).centerCrop())
                 .load(current.uri)
                 .into(viewHolder.image);
     }
@@ -99,7 +99,7 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.ListVi
     public RequestBuilder<Drawable> getPreloadRequestBuilder(@NonNull ExifImageData item) {
         return mRequestBuilder
                 .clone()
-                .apply(new RequestOptions().override(300, 300).centerCrop())
+                .apply(new RequestOptions().centerCrop())
                 .load(item.uri);
     }
 

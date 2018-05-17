@@ -26,7 +26,9 @@ import com.hackday.dmyphotogridview_parkhyerim.adapters.RecyclerAdapter;
 import com.hackday.dmyphotogridview_parkhyerim.asynctasks.ImageDataLoader;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class MainActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<List<ExifImageData>> {
     private final static String TAG = MainActivity.class.getSimpleName();
@@ -108,7 +110,8 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
             public boolean onTouch(View v, MotionEvent event) {
 
                 mScaleGestureDetector.onTouchEvent(event);
-//                    v.getLayoutParams().width = mScreenWidth / ROW_COUNT[mNowRowCountIndex];
+//                v.getRootView().
+////                v.getLayoutParams().width = mScreenWidth / ROW_COUNT[mNowRowCountIndex];
 
                 return false;
             }
@@ -148,7 +151,10 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     }
 
     private List<ExifImageData> grouping(List<ExifImageData> imageData) {
-        
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
+        SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy년 MM월", Locale.KOREAN);
+        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy년", Locale.KOREAN);
+
         return imageData;
     }
 
