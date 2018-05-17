@@ -20,7 +20,9 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
+    configurations {
+        all*.exclude group: 'com.android.support', module: 'support-v13'
+    }
     /* Google Android Support Library */
     def googleSupportVersion = '27.1.1'
     implementation "com.android.support:appcompat-v7:${googleSupportVersion}"

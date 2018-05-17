@@ -173,8 +173,8 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
             mRecyclerAdapter = new RecyclerAdapter(mContext, yearGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
         }
 
-//        RecyclerViewPreloader<ExifImageData> recyclerViewPreloader = new RecyclerViewPreloader<>(Glide.with(this), mRecyclerAdapter, mRecyclerAdapter, 3);
-//        mRecyclerView.addOnScrollListener(recyclerViewPreloader);
+        RecyclerViewPreloader<ExifImageData> recyclerViewPreloader = new RecyclerViewPreloader<>(Glide.with(this), mRecyclerAdapter, mRecyclerAdapter, 3);
+        mRecyclerView.addOnScrollListener(recyclerViewPreloader);
         mRecyclerView.setAdapter(mRecyclerAdapter);
     }
 
