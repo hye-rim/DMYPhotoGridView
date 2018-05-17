@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+
+    <!-- text size -->
+    <dimen name="group_text_size">16sp</dimen>
+
+    <!-- daily -->
+    <dimen name="daily_recyclerview_item_horizontal_padding">16dp</dimen>
+    <dimen name="daily_recyclerview_item_vertical_padding">16dp</dimen>
+
+    <!-- month -->
+    <dimen name="month_recyclerview_item_horizontal_padding">4dp</dimen>
+    <dimen name="month_recyclerview_item_vertical_padding">4dp</dimen>
+
+    <!-- year -->
+    <dimen name="year_recyclerview_item_horizontal_padding">1dp</dimen>
+    <dimen name="year_recyclerview_item_vertical_padding">1dp</dimen>
+
+</resources>
