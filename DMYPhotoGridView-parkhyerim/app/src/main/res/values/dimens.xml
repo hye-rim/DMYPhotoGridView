@@ -21,5 +21,6 @@
 
     <dimen name="header_shadow_height">30dp</dimen>
     <dimen name="header_bottom_margin">40dp</dimen>
+    <dimen name="header_left_padding">10dp</dimen>
 
 </resources>

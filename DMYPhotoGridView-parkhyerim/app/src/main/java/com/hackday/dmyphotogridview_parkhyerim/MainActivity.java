@@ -8,6 +8,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -144,9 +145,54 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<ArrayList<ExifImageData>> loader, ArrayList<ExifImageData> imageData) {
+        //sort ImageData
+
+
         grouping(imageData);
 
         updateAdapter();
+    }
+
+
+    private ArrayList<ExifImageData> grouping(ArrayList<ExifImageData> imageData) {
+        for (ExifImageData image : imageData) {
+            String date = image.dateTime;
+            String nowDate = date.substring(0, 8) + date.substring(date.length() - 4, date.length());
+            if (dailyGroup.containsKey(nowDate)) {
+                dailyGroup.get(nowDate).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                dailyGroup.put(nowDate, imageList);
+            }
+        }
+
+        for (ExifImageData image : imageData) {
+            String date = image.dateTime;
+            String nowDate = date.substring(4, 8) + date.substring(date.length() - 4, date.length());
+            if (monthlyGroup.containsKey(nowDate)) {
+                monthlyGroup.get(nowDate).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                monthlyGroup.put(nowDate, imageList);
+            }
+        }
+
+
+        for (ExifImageData image : imageData) {
+            String date = image.dateTime;
+            String nowDate = date.substring(date.length() - 4, date.length());
+            if (yearGroup.containsKey(nowDate)) {
+                yearGroup.get(nowDate).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                yearGroup.put(nowDate, imageList);
+            }
+        }
+
+        return imageData;
     }
 
     private void updateAdapter() {
@@ -160,45 +206,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
             mRecyclerAdapter = new RecyclerAdapter(mContext, yearGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
         }
         mRecyclerView.setAdapter(mRecyclerAdapter);
-    }
-
-
-    private ArrayList<ExifImageData> grouping(ArrayList<ExifImageData> imageData) {
-        for (ExifImageData image : imageData) {
-            String nowDate = image.dateTime.substring(0, 10);
-            if (dailyGroup.containsKey(nowDate)) {
-                dailyGroup.get(nowDate).add(image);
-            } else {
-                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
-                imageList.add(image);
-                dailyGroup.put(nowDate, imageList);
-            }
-        }
-
-        for (ExifImageData image : imageData) {
-            String nowDate = image.dateTime.substring(0, 7);
-            if (monthlyGroup.containsKey(nowDate)) {
-                monthlyGroup.get(nowDate).add(image);
-            } else {
-                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
-                imageList.add(image);
-                monthlyGroup.put(nowDate, imageList);
-            }
-        }
-
-
-        for (ExifImageData image : imageData) {
-            String nowDate = image.dateTime.substring(0, 4);
-            if (yearGroup.containsKey(nowDate)) {
-                yearGroup.get(nowDate).add(image);
-            } else {
-                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
-                imageList.add(image);
-                yearGroup.put(nowDate, imageList);
-            }
-        }
-
-        return imageData;
     }
 
     @Override

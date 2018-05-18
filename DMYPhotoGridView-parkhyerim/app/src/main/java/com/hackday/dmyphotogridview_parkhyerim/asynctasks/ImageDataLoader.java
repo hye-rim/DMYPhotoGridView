@@ -135,7 +135,6 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
 
             for (Directory directory : metadata.getDirectories()) {
                 if (directory.containsTag(datetimeTag)) {
-                    Log.d("exif", "Using tag " + directory.getTagName(datetimeTag) + " for timestamp / " + directory.getString(datetimeTag));
                     SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
                     datetime = exifDatetimeFormat.parse(directory.getString(datetimeTag));
                     break;
