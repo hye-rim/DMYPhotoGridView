@@ -84,9 +84,9 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
             public boolean onScale(ScaleGestureDetector detector) {
                 if (detector.getCurrentSpan() > 200 && detector.getTimeDelta() > 200) {
                     if (detector.getCurrentSpan() - detector.getPreviousSpan() < -1) {
-                        if (mNowRowCountIndex > 0) {
+                        if (mNowRowCountIndex < 2) {
                             isChangeRowCnt = true;
-                            mNowRowCountIndex--;
+                            mNowRowCountIndex++;
                             mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
                             mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
                             mRecyclerView.setLayoutManager(mGridLayoutManager);
@@ -95,9 +95,9 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
                             return true;
                         }
                     } else if (detector.getCurrentSpan() - detector.getPreviousSpan() > 1) {
-                        if (mNowRowCountIndex < 2) {
+                        if (mNowRowCountIndex > 0) {
                             isChangeRowCnt = true;
-                            mNowRowCountIndex++;
+                            mNowRowCountIndex--;
                             mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
                             mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
                             mRecyclerView.setLayoutManager(mGridLayoutManager);
