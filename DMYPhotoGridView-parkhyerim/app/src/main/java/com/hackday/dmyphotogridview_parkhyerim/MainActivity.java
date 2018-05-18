@@ -23,8 +23,14 @@ import com.hackday.dmyphotogridview_parkhyerim.adapters.RecyclerAdapter;
 import com.hackday.dmyphotogridview_parkhyerim.asynctasks.ImageDataLoader;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class MainActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<ArrayList<ExifImageData>> {
@@ -145,8 +151,10 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<ArrayList<ExifImageData>> loader, ArrayList<ExifImageData> imageData) {
-        //sort ImageData
+        final SimpleDateFormat originalDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzzz yyyy");
+        final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
 
+        //TODO: SORTING
 
         grouping(imageData);
 

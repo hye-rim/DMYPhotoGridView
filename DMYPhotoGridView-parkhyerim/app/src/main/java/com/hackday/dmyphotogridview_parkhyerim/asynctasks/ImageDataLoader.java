@@ -126,7 +126,6 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
 
     }
     private Date extractExifDateTime(String imagePath) throws ParseException {
-//        Log.d("exif", "Attempting to extract EXIF date/time from image at " + imagePath);
         Date datetime = new Date(0); // or initialize to null, if you prefer
         try {
             Metadata metadata = JpegMetadataReader.readMetadata(new File(imagePath));
