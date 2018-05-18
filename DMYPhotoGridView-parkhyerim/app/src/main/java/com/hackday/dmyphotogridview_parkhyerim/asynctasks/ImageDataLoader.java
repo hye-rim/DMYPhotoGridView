@@ -81,13 +81,6 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     public ArrayList<ExifImageData> loadInBackground() {
         ArrayList<ExifImageData> imageList = loadImages(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0]);
 
-//        Collections.sort(imageList, new Comparator<ExifImageData>() {
-//            @Override
-//            public int compare(ExifImageData mediaStoreData, ExifImageData mediaStoreData2) {
-//                return Long.valueOf(mediaStoreData2.dateTime).compareTo(Long.valueOf(mediaStoreData.dateTime));
-//            }
-//        });
-
         try {
             imageList = getDateTime(imageList);
         } catch (ParseException e) {
@@ -101,7 +94,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     private ArrayList<ExifImageData> loadImages(Uri contentUri, String[] projection, String orderBy, String idCol, String dataCol) {
         final ArrayList<ExifImageData> data = new ArrayList<ExifImageData>();
 
-        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC LIMIT 300");//orderBy + " DESC"
+        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC LIMIT 1000");//orderBy + " DESC"
 
         if (cursor == null) {
             return data;
@@ -110,7 +103,6 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
         try {
             final int idColNum = cursor.getColumnIndexOrThrow(idCol);
             final int dataColNum = cursor.getColumnIndexOrThrow(dataCol);
-            int i = 0;
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(idColNum);
                 String path = cursor.getString(dataColNum);
@@ -144,7 +136,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
             for (Directory directory : metadata.getDirectories()) {
                 if (directory.containsTag(datetimeTag)) {
                     Log.d("exif", "Using tag " + directory.getTagName(datetimeTag) + " for timestamp / " + directory.getString(datetimeTag));
-                    SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.KOREAN);
+                    SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
                     datetime = exifDatetimeFormat.parse(directory.getString(datetimeTag));
                     break;
                 }
