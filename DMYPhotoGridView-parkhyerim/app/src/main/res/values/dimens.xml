@@ -18,6 +18,7 @@
     <!-- year -->
     <dimen name="year_recyclerview_item_horizontal_padding">1dp</dimen>
     <dimen name="year_recyclerview_item_vertical_padding">1dp</dimen>
+
     <dimen name="header_shadow_size">20dp</dimen>
 
 </resources>

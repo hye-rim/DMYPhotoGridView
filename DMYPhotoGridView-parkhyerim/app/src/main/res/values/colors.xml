@@ -7,8 +7,8 @@
     <color name="colorSecondary">#3F51B5</color>
     <color name="colorSecondaryDark">#018786</color>
 
-    <color name="Background">#FFFFFF</color>
-    <color name="Surface">#FFFFFF</color>
+    <color name="background">#FFFFFF</color>
+    <color name="surface">#FFFFFF</color>
 
     <color name="OnPrimary">#FFFFFF</color>
     <color name="OnSecondary">#000000</color>
