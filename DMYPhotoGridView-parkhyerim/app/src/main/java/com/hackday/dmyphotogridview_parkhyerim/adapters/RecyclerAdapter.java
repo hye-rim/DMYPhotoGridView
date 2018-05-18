@@ -20,8 +20,10 @@ import com.hackday.dmyphotogridview_parkhyerim.R;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +33,7 @@ import java.util.Map;
 public class RecyclerAdapter extends StickyHeaderGridAdapter
             implements ListPreloader.PreloadSizeProvider<ExifImageData>, ListPreloader.PreloadModelProvider<ExifImageData> {
     private final Map<String, ArrayList<ExifImageData>> mData;
+    private final ArrayList<String> mDataHeader;
     private final RequestBuilder<Drawable> mRequestBuilder;
 
     private Context mContext;
@@ -44,6 +47,14 @@ public class RecyclerAdapter extends StickyHeaderGridAdapter
         mScreenWidth = screenWidth;
 
         setHasStableIds(true);
+
+        mDataHeader = new ArrayList<>();
+        Iterator<String> mapIter = mData.keySet().iterator();
+
+        while(mapIter.hasNext()){
+            String header = mapIter.next();
+            mDataHeader.add(header);
+        }
     }
 
     @Override
@@ -53,7 +64,14 @@ public class RecyclerAdapter extends StickyHeaderGridAdapter
 
     @Override
     public int getSectionItemCount(int section) {
-        return mData.get(section).size();
+        String key = mDataHeader.get(section);
+
+        if(mData.get(key) != null) {
+            return mData.get(key).size();
+        }
+        else {
+            return 0;
+        }
     }
 
 
@@ -89,15 +107,15 @@ public class RecyclerAdapter extends StickyHeaderGridAdapter
     @Override
     public void onBindHeaderViewHolder(StickyHeaderGridAdapter.HeaderViewHolder viewHolder, int section) {
         final HeaderViewHolder holder = (HeaderViewHolder) viewHolder;
-        final String label = "Header " + section;
+        final String label = mDataHeader.get(section);
         holder.titleTextView.setText(label);
     }
 
     @Override
     public void onBindItemViewHolder(StickyHeaderGridAdapter.ItemViewHolder viewHolder, int section, int position) {
         final ItemViewHolder holder = (ItemViewHolder) viewHolder;
-
-        ExifImageData current = mData.get(section).get(position);
+        final String key = mDataHeader.get(section);
+        ExifImageData current = mData.get(key).get(position);
 
         mRequestBuilder
                 .clone()

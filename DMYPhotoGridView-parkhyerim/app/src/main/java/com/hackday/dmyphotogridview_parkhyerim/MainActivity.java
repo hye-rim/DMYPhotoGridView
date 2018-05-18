@@ -29,6 +29,7 @@ import com.hackday.dmyphotogridview_parkhyerim.asynctasks.ImageDataLoader;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 
 import java.io.File;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,7 +44,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     private Context mContext;
     private RecyclerView mRecyclerView;
     private StickyHeaderGridLayoutManager mGridLayoutManager;
-    //    private GridLayoutManager mLayoutManager;
     private RecyclerAdapter mRecyclerAdapter;
     RequestBuilder<Drawable> mRequestBuilder;
 
@@ -64,10 +64,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         checkPermission();
-
-        init();
-
-        //TODO : grouping
     }
 
     private void init() {
@@ -89,6 +85,8 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     @Override
     protected void onPermissionGranted() {
         super.onPermissionGranted();
+
+        init();
     }
 
     private void setPinch() {
@@ -173,25 +171,15 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
             mRecyclerAdapter = new RecyclerAdapter(mContext, yearGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
         }
 
-        RecyclerViewPreloader<ExifImageData> recyclerViewPreloader = new RecyclerViewPreloader<>(Glide.with(this), mRecyclerAdapter, mRecyclerAdapter, 3);
-        mRecyclerView.addOnScrollListener(recyclerViewPreloader);
+//        RecyclerViewPreloader<ExifImageData> recyclerViewPreloader = new RecyclerViewPreloader<>(Glide.with(this), mRecyclerAdapter, mRecyclerAdapter, 3);
+//        mRecyclerView.addOnScrollListener(recyclerViewPreloader);
         mRecyclerView.setAdapter(mRecyclerAdapter);
     }
 
 
     private ArrayList<ExifImageData> grouping(ArrayList<ExifImageData> imageData) {
         for (ExifImageData image : imageData) {
-            Date date = extractExifDateTime(image.path);
-            image.dateTime = String.valueOf(date);
-            image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
-        }
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
-        SimpleDateFormat monthFormat = new SimpleDateFormat("yyyy년 MM월", Locale.KOREAN);
-        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy년", Locale.KOREAN);
-
-        for (ExifImageData image : imageData) {
-            String nowDate = dateFormat.format(image.dateTime);
+            String nowDate = image.dateTime.substring(0, 10);
             if (dailyGroup.containsKey(nowDate)) {
                 dailyGroup.get(nowDate).add(image);
             } else {
@@ -202,7 +190,7 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         }
 
         for (ExifImageData image : imageData) {
-            String nowDate = monthFormat.format(image.dateTime);
+            String nowDate = image.dateTime.substring(0, 7);
             if (monthlyGroup.containsKey(nowDate)) {
                 monthlyGroup.get(nowDate).add(image);
             } else {
@@ -214,7 +202,7 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
 
         for (ExifImageData image : imageData) {
-            String nowDate = yearFormat.format(image.dateTime);
+            String nowDate = image.dateTime.substring(0, 4);
             if (yearGroup.containsKey(nowDate)) {
                 yearGroup.get(nowDate).add(image);
             } else {
@@ -232,31 +220,5 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
     }
 
-    private Date extractExifDateTime(String imagePath) {
-//        Log.d("exif", "Attempting to extract EXIF date/time from image at " + imagePath);
-        Date datetime = new Date(0); // or initialize to null, if you prefer
-        try {
-            Metadata metadata = JpegMetadataReader.readMetadata(new File(imagePath));
-            // these are listed in order of preference
-            int[] datetimeTags = new int[]{ExifImageDirectory.TAG_DATETIME_ORIGINAL,
-                    ExifImageDirectory.TAG_DATETIME,
-                    ExifImageDirectory.TAG_DATETIME_DIGITIZED};
-
-            for (Directory directory : metadata.getDirectories()) {
-                for (int tag : datetimeTags) {
-                    if (directory.containsTag(tag)) {
-//                        Log.d("exif", "Using tag " + directory.getTagName(tag) + " for timestamp");
-                        SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
-                        datetime = exifDatetimeFormat.parse(directory.getString(tag));
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Log.w("exif", "Unable to extract EXIF metadata from image at " + imagePath, e);
-        }
-
-        return datetime;
-    }
 
 }
