@@ -5,7 +5,7 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
 
     <!-- text size -->
-    <dimen name="group_text_size">16sp</dimen>
+    <dimen name="group_text_size">18sp</dimen>
 
     <!-- daily -->
     <dimen name="daily_recyclerview_item_horizontal_padding">16dp</dimen>
