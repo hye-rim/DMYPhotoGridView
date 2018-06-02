@@ -68,7 +68,7 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
         mRecyclerView = (RecyclerView) findViewById(R.id.main_recycler_view);
         mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
-        mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
+//        mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
 
         mRecyclerView.setLayoutManager(mGridLayoutManager);
         mRecyclerView.setHasFixedSize(true);
@@ -95,7 +95,7 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
                             isChangeRowCnt = true;
                             mNowRowCountIndex++;
                             mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
-                            mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
+//                            mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
                             mRecyclerView.setLayoutManager(mGridLayoutManager);
                             updateAdapter();
                             isChangeRowCnt = true;
@@ -106,7 +106,7 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
                             isChangeRowCnt = true;
                             mNowRowCountIndex--;
                             mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
-                            mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
+//                            mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
                             mRecyclerView.setLayoutManager(mGridLayoutManager);
                             updateAdapter();
                             isChangeRowCnt = true;
@@ -151,33 +151,33 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<ArrayList<ExifImageData>> loader, ArrayList<ExifImageData> imageData) {
-        final SimpleDateFormat originalDateFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzzz yyyy");
-        final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd", Locale.ENGLISH);
-
         //TODO: SORTING
-
         grouping(imageData);
 
         updateAdapter();
     }
 
 
-    private ArrayList<ExifImageData> grouping(ArrayList<ExifImageData> imageData) {
+    private void grouping(ArrayList<ExifImageData> imageData) {
+        String nowDate;
         for (ExifImageData image : imageData) {
             String date = image.dateTime;
-            String nowDate = date.substring(0, 8) + date.substring(date.length() - 4, date.length());
-            if (dailyGroup.containsKey(nowDate)) {
-                dailyGroup.get(nowDate).add(image);
+
+
+            //daily - 0000년 00월 00일
+            if (dailyGroup.containsKey(date)) {
+                dailyGroup.get(date).add(image);
             } else {
                 ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
                 imageList.add(image);
-                dailyGroup.put(nowDate, imageList);
+                dailyGroup.put(date, imageList);
             }
-        }
 
-        for (ExifImageData image : imageData) {
-            String date = image.dateTime;
-            String nowDate = date.substring(4, 8) + date.substring(date.length() - 4, date.length());
+            //month - 0000년 00월
+            nowDate = new String();
+            if (!date.isEmpty() && date.length() > 1) {
+                nowDate = date.substring(0, 9);
+            }
             if (monthlyGroup.containsKey(nowDate)) {
                 monthlyGroup.get(nowDate).add(image);
             } else {
@@ -185,12 +185,12 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
                 imageList.add(image);
                 monthlyGroup.put(nowDate, imageList);
             }
-        }
 
-
-        for (ExifImageData image : imageData) {
-            String date = image.dateTime;
-            String nowDate = date.substring(date.length() - 4, date.length());
+            //year - 0000년
+            nowDate = new String();
+            if (!date.isEmpty() && date.length() > 1) {
+                nowDate = date.substring(0, 5);
+            }
             if (yearGroup.containsKey(nowDate)) {
                 yearGroup.get(nowDate).add(image);
             } else {
@@ -200,7 +200,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
             }
         }
 
-        return imageData;
     }
 
     private void updateAdapter() {
