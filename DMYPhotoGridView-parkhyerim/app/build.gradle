@@ -37,10 +37,10 @@ dependencies {
         // Excludes the support library because it's already included by Glide.
         transitive = false
     }
+    annotationProcessor "com.github.bumptech.glide:compiler:${glideVersion}"
+
     implementation "com.drewnoakes:metadata-extractor:2.11.0"
     implementation 'com.codewaves.stickyheadergrid:stickyheadergrid:0.9.6'
-
-    annotationProcessor "com.github.bumptech.glide:compiler:${glideVersion}"
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
