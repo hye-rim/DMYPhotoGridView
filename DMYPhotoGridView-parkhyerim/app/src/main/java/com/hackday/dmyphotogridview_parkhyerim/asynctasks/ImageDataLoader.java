@@ -20,6 +20,7 @@ import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
@@ -108,7 +109,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(idColNum);
                 String path = cursor.getString(dataColNum);
-                if(!path.contains(".png") && !path.contains(".gif")) { //png, gif X
+                if (!path.contains(".png") && !path.contains(".gif")) { //png, gif X
                     data.add(new ExifImageData(id, Uri.withAppendedPath(contentUri, Long.toString(id)), path));
                 }
             }
@@ -129,23 +130,35 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
         return imageList;
 
     }
+
     private String extractExifDateTime(String imagePath) throws ParseException {
+        SimpleDateFormat exifDatetimeFormatSSS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS", Locale.getDefault());
+        SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
+        SimpleDateFormat format = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
         Log.d("exif", "Attempting to extract EXIF date/time from image at " + imagePath);
         Date datetime = new Date(0); // or initialize to null, if you prefer
         String formatdate = " ";
         try {
             Metadata metadata = JpegMetadataReader.readMetadata(new File(imagePath));
-            int[] datetimeTags = new int[] { ExifImageDirectory.TAG_DATETIME_ORIGINAL,
+            int[] datetimeTags = new int[]{ExifImageDirectory.TAG_DATETIME_ORIGINAL,
                     ExifImageDirectory.TAG_DATETIME,
-                    ExifImageDirectory.TAG_DATETIME_DIGITIZED };
+                    ExifImageDirectory.TAG_DATETIME_DIGITIZED};
 
             for (Directory directory : metadata.getDirectories()) {
                 for (int tag : datetimeTags) {
                     if (directory.containsTag(tag)) {
-                        Log.d("exif", "Using tag " + directory.getTagName(tag) + " for timestamp");
-                        SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd", Locale.getDefault());
-                        datetime = exifDatetimeFormat.parse(directory.getString(tag));
-                        SimpleDateFormat format = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
+                        String date = directory.getString(tag);
+
+                        //date format HH:mm:ss:SSS
+                        if (date.length() > 20) {
+                            datetime = exifDatetimeFormatSSS.parse(directory.getString(tag));
+                        }
+
+                        //date format HH:mm:ss
+                        else {
+                            datetime = exifDatetimeFormat.parse(directory.getString(tag));
+                        }
+
                         formatdate = format.format(datetime);
 
                         break;
