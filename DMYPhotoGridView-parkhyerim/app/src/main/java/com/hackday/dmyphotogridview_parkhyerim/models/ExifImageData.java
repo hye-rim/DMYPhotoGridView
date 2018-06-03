@@ -29,8 +29,7 @@ public class ExifImageData implements Parcelable {
 
     public final long rowId;
     public final Uri uri;
-    public String dateTime; //2018:05:23 10:15
-    public String dateTimeNum; //201805231015
+    public String dateTime;
     public String path;
 
     public ExifImageData(long rowId, Uri uri, String path) {
@@ -38,14 +37,12 @@ public class ExifImageData implements Parcelable {
         this.uri = uri;
         this.path = path;
         dateTime = null;
-        dateTimeNum = null;
     }
 
     public ExifImageData(Parcel in) {
         rowId = in.readLong();
         uri = Uri.parse(in.readString());
         dateTime = in.readString();
-        dateTimeNum = in.readString();
         path = in.readString();
     }
 
@@ -54,7 +51,6 @@ public class ExifImageData implements Parcelable {
         parcel.writeLong(rowId);
         parcel.writeString(uri.toString());
         parcel.writeString(dateTime);
-        parcel.writeString(dateTimeNum);
         parcel.writeString(path);
     }
 
@@ -63,7 +59,6 @@ public class ExifImageData implements Parcelable {
         return "ExifImageData{" +
                 "uri=" + uri +
                 ", dateTime='" + dateTime + '\'' +
-                ", dateTimeNum=" + dateTimeNum +
                 ", path=" + path +
                 '}';
     }

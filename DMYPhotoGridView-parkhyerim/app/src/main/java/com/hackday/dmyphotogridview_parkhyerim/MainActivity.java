@@ -57,6 +57,14 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         checkPermission();
     }
 
+
+    @Override
+    protected void onPermissionGranted() {
+        super.onPermissionGranted();
+
+        init();
+    }
+
     private void init() {
         mContext = getApplicationContext();
         mScreenWidth = getScreenWidth(mContext);
@@ -71,13 +79,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         Glide.get(this);
         getSupportLoaderManager().initLoader(R.id.loader_id_media_store_data, null, this);
         setPinch();
-    }
-
-    @Override
-    protected void onPermissionGranted() {
-        super.onPermissionGranted();
-
-        init();
     }
 
     private void setPinch() {

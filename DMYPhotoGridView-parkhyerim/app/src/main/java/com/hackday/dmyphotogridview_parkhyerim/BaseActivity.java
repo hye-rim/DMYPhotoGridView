@@ -47,10 +47,6 @@ public class BaseActivity extends AppCompatActivity {
         super.onRestart();
     }
 
-    private void init() {
-    }
-
-
     protected void checkPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
                 && ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {

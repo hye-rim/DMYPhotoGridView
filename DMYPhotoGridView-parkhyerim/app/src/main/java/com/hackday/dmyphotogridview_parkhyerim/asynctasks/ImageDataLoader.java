@@ -133,7 +133,6 @@ public class ImageDataLoader extends AsyncTaskLoader<GroupingImageData> {
         for (ExifImageData image : imageList) {
             String date = extractExifDateTime(image.path);
             image.dateTime = date;
-            image.dateTimeNum = image.dateTime.replaceAll("[^0-9]", "");
         }
 
         return imageList;
