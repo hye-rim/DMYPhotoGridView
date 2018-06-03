@@ -3,17 +3,16 @@ package com.hackday.dmyphotogridview_parkhyerim;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
-import android.media.ExifInterface;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ProgressBar;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
@@ -22,23 +21,17 @@ import com.codewaves.stickyheadergrid.StickyHeaderGridLayoutManager;
 import com.hackday.dmyphotogridview_parkhyerim.adapters.RecyclerAdapter;
 import com.hackday.dmyphotogridview_parkhyerim.asynctasks.ImageDataLoader;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
+import com.hackday.dmyphotogridview_parkhyerim.models.GroupingImageData;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
-public class MainActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<ArrayList<ExifImageData>> {
+public class MainActivity extends BaseActivity implements LoaderManager.LoaderCallbacks<GroupingImageData> {
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static int[] ROW_COUNT = {3, 5, 7};
 
     private Context mContext;
-    private RecyclerView mRecyclerView;
     private StickyHeaderGridLayoutManager mGridLayoutManager;
     private RecyclerAdapter mRecyclerAdapter;
     RequestBuilder<Drawable> mRequestBuilder;
@@ -49,11 +42,13 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     private int mNowRowCountIndex = 0;
     private boolean isChangeRowCnt = false;
 
+    private Map<String, ArrayList<ExifImageData>> mDailyGroup = new HashMap<String, ArrayList<ExifImageData>>();
+    private Map<String, ArrayList<ExifImageData>> mMonthlyGroup = new HashMap<String, ArrayList<ExifImageData>>();
+    private Map<String, ArrayList<ExifImageData>> mYearGroup = new HashMap<String, ArrayList<ExifImageData>>();
 
-    private Map<String, ArrayList<ExifImageData>> dailyGroup = new HashMap<String, ArrayList<ExifImageData>>();
-    private Map<String, ArrayList<ExifImageData>> monthlyGroup = new HashMap<String, ArrayList<ExifImageData>>();
-    private Map<String, ArrayList<ExifImageData>> yearGroup = new HashMap<String, ArrayList<ExifImageData>>();
-
+    //View Components
+    private RecyclerView mRecyclerView;
+    private ProgressBar mProgressBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +61,7 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
         mContext = getApplicationContext();
         mScreenWidth = getScreenWidth(mContext);
 
+        mProgressBar = (ProgressBar) findViewById(R.id.main_prgress_bar);
         mRecyclerView = (RecyclerView) findViewById(R.id.main_recycler_view);
         mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
 
@@ -142,78 +138,38 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
     }
 
     @Override
-    public Loader<ArrayList<ExifImageData>> onCreateLoader(int i, Bundle bundle) {
+    public Loader<GroupingImageData> onCreateLoader(int i, Bundle bundle) {
+        mProgressBar.setVisibility(View.VISIBLE);
         return new ImageDataLoader(mContext);
     }
 
     @Override
-    public void onLoadFinished(Loader<ArrayList<ExifImageData>> loader, ArrayList<ExifImageData> imageData) {
-        //TODO: SORTING
-        grouping(imageData);
+    public void onLoadFinished(Loader<GroupingImageData> loader, GroupingImageData groupingImageData) {
+        mProgressBar.setVisibility(View.GONE);
+
+        mDailyGroup = groupingImageData.dailyGroup;
+        mMonthlyGroup = groupingImageData.montlyGroup;
+        mYearGroup = groupingImageData.yearGroup;
 
         updateAdapter();
     }
 
 
-    private void grouping(ArrayList<ExifImageData> imageData) {
-        String nowDate;
-        for (ExifImageData image : imageData) {
-            String date = image.dateTime;
-
-
-            //daily - 0000년 00월 00일
-            if (dailyGroup.containsKey(date)) {
-                dailyGroup.get(date).add(image);
-            } else {
-                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
-                imageList.add(image);
-                dailyGroup.put(date, imageList);
-            }
-
-            //month - 0000년 00월
-            nowDate = new String();
-            if (!date.isEmpty() && date.length() > 1) {
-                nowDate = date.substring(0, 9);
-            }
-            if (monthlyGroup.containsKey(nowDate)) {
-                monthlyGroup.get(nowDate).add(image);
-            } else {
-                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
-                imageList.add(image);
-                monthlyGroup.put(nowDate, imageList);
-            }
-
-            //year - 0000년
-            nowDate = new String();
-            if (!date.isEmpty() && date.length() > 1) {
-                nowDate = date.substring(0, 5);
-            }
-            if (yearGroup.containsKey(nowDate)) {
-                yearGroup.get(nowDate).add(image);
-            } else {
-                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
-                imageList.add(image);
-                yearGroup.put(nowDate, imageList);
-            }
-        }
-
-    }
-
     private void updateAdapter() {
         mRequestBuilder = Glide.with(this).asDrawable();
 
         if (mNowRowCountIndex == 0) {
-            mRecyclerAdapter = new RecyclerAdapter(mContext, dailyGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
+            mRecyclerAdapter = new RecyclerAdapter(mContext, mDailyGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
         } else if (mNowRowCountIndex == 1) {
-            mRecyclerAdapter = new RecyclerAdapter(mContext, monthlyGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
+            mRecyclerAdapter = new RecyclerAdapter(mContext, mMonthlyGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
         } else {
-            mRecyclerAdapter = new RecyclerAdapter(mContext, yearGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
+            mRecyclerAdapter = new RecyclerAdapter(mContext, mYearGroup, mRequestBuilder, mScreenWidth / ROW_COUNT[mNowRowCountIndex]);
         }
         mRecyclerView.setAdapter(mRecyclerAdapter);
     }
 
     @Override
-    public void onLoaderReset(Loader<ArrayList<ExifImageData>> loader) {
+    public void onLoaderReset(Loader<GroupingImageData> loader) {
 
     }
 

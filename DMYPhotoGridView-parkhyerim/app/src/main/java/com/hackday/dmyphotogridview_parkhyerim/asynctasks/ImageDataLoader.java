@@ -1,13 +1,10 @@
 package com.hackday.dmyphotogridview_parkhyerim.asynctasks;
 
-import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.media.ExifInterface;
 import android.support.v4.content.AsyncTaskLoader;
 import android.util.Log;
 
@@ -16,20 +13,22 @@ import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.exif.ExifImageDirectory;
 import com.hackday.dmyphotogridview_parkhyerim.models.ExifImageData;
+import com.hackday.dmyphotogridview_parkhyerim.models.GroupingImageData;
 
 import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
  * Created by hyerim on 2018. 5. 17....
  */
-public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
+public class ImageDataLoader extends AsyncTaskLoader<GroupingImageData> {
     private static final String TAG = ImageDataLoader.class.getSimpleName();
     private static final String[] IMAGE_PROJECTION = new String[]{MediaStore.Images.Media.DATA, MediaStore.Images.Media._ID};
 
@@ -39,9 +38,9 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     final SimpleDateFormat appDateformat = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
 
     private Context mContext;
-    private ArrayList<ExifImageData> cached;
-    private boolean observerRegistered = false;
-    private final ForceLoadContentObserver forceLoadContentObserver = new ForceLoadContentObserver();
+    private GroupingImageData mCached;
+    private boolean isObserverRegistered = false;
+    private final ForceLoadContentObserver mForceLoadContentObserver = new ForceLoadContentObserver();
 
     public ImageDataLoader(Context context) {
         super(context);
@@ -49,7 +48,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     }
 
     @Override
-    public void deliverResult(ArrayList<ExifImageData> data) {
+    public void deliverResult(GroupingImageData data) {
         if (!isReset() && isStarted()) {
             super.deliverResult(data);
         }
@@ -57,10 +56,10 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
 
     @Override
     protected void onStartLoading() {
-        if (cached != null) {
-            deliverResult(cached);
+        if (mCached != null) {
+            deliverResult(mCached);
         }
-        if (takeContentChanged() || cached == null) {
+        if (takeContentChanged() || mCached == null) {
             forceLoad();
         }
         registerContentObserver();
@@ -76,7 +75,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
         super.onReset();
 
         onStopLoading();
-        cached = null;
+        mCached = null;
         unregisterContentObserver();
     }
 
@@ -87,7 +86,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     }
 
     @Override
-    public ArrayList<ExifImageData> loadInBackground() {
+    public GroupingImageData loadInBackground() {
         ArrayList<ExifImageData> imageList = loadImages(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, IMAGE_PROJECTION, MediaStore.Images.Media.DATE_TAKEN, IMAGE_PROJECTION[1], IMAGE_PROJECTION[0]);
 
         try {
@@ -96,7 +95,11 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
             e.printStackTrace();
         }
 
-        return imageList;
+        GroupingImageData groupingImageList = grouping(imageList);
+
+        //TODO: SORTING
+
+        return groupingImageList;
     }
 
 
@@ -134,7 +137,6 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
         }
 
         return imageList;
-
     }
 
     private String extractExifDateTime(String imagePath) throws ParseException {
@@ -150,7 +152,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
                 for (int tag : datetimeTags) {
                     if (directory.containsTag(tag)) {
                         String date = directory.getString(tag);
-                        if(date.isEmpty() || date.length() <= 1 ){
+                        if (date.isEmpty() || date.length() <= 1) {
                             continue;
                         }
 
@@ -183,20 +185,70 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
         return formatdate;
     }
 
-    private void registerContentObserver() {
-        if (!observerRegistered) {
-            ContentResolver cr = getContext().getContentResolver();
-            cr.registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, forceLoadContentObserver);
+    private GroupingImageData grouping(ArrayList<ExifImageData> imageData) {
+        Map<String, ArrayList<ExifImageData>> dailyGroup = new HashMap<String, ArrayList<ExifImageData>>();
+        Map<String, ArrayList<ExifImageData>> monthlyGroup = new HashMap<String, ArrayList<ExifImageData>>();
+        Map<String, ArrayList<ExifImageData>> yearGroup = new HashMap<String, ArrayList<ExifImageData>>();
 
-            observerRegistered = true;
+        String nowDate;
+        for (ExifImageData image : imageData) {
+            String date = image.dateTime;
+
+
+            //daily - 0000년 00월 00일
+            if (dailyGroup.containsKey(date)) {
+                dailyGroup.get(date).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                dailyGroup.put(date, imageList);
+            }
+
+            //month - 0000년 00월
+            nowDate = new String();
+            if (!date.isEmpty() && date.length() > 1) {
+                nowDate = date.substring(0, 9);
+            }
+            if (monthlyGroup.containsKey(nowDate)) {
+                monthlyGroup.get(nowDate).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                monthlyGroup.put(nowDate, imageList);
+            }
+
+            //year - 0000년
+            nowDate = new String();
+            if (!date.isEmpty() && date.length() > 1) {
+                nowDate = date.substring(0, 5);
+            }
+            if (yearGroup.containsKey(nowDate)) {
+                yearGroup.get(nowDate).add(image);
+            } else {
+                ArrayList<ExifImageData> imageList = new ArrayList<ExifImageData>();
+                imageList.add(image);
+                yearGroup.put(nowDate, imageList);
+            }
+        }
+
+        GroupingImageData groupingImageList = new GroupingImageData(dailyGroup, monthlyGroup, yearGroup);
+        return groupingImageList;
+    }
+
+    private void registerContentObserver() {
+        if (!isObserverRegistered) {
+            ContentResolver cr = getContext().getContentResolver();
+            cr.registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, mForceLoadContentObserver);
+
+            isObserverRegistered = true;
         }
     }
 
     private void unregisterContentObserver() {
-        if (observerRegistered) {
-            observerRegistered = false;
+        if (isObserverRegistered) {
+            isObserverRegistered = false;
 
-            getContext().getContentResolver().unregisterContentObserver(forceLoadContentObserver);
+            getContext().getContentResolver().unregisterContentObserver(mForceLoadContentObserver);
         }
     }
 }
