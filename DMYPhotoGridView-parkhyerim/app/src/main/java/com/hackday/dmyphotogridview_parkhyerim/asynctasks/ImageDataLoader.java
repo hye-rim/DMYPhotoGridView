@@ -24,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Created by hyerim on 2018. 5. 17....
@@ -31,6 +32,11 @@ import java.util.Locale;
 public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     private static final String TAG = ImageDataLoader.class.getSimpleName();
     private static final String[] IMAGE_PROJECTION = new String[]{MediaStore.Images.Media.DATA, MediaStore.Images.Media._ID};
+
+    final SimpleDateFormat exifDatetimeFormatDefault = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+    final SimpleDateFormat exifDatetimeFormatSSS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS", Locale.getDefault());
+    final SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
+    final SimpleDateFormat appDateformat = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
 
     private Context mContext;
     private ArrayList<ExifImageData> cached;
@@ -132,10 +138,6 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
     }
 
     private String extractExifDateTime(String imagePath) throws ParseException {
-        SimpleDateFormat exifDatetimeFormatSSS = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS", Locale.getDefault());
-        SimpleDateFormat exifDatetimeFormat = new SimpleDateFormat("yyyy:MM:dd HH:mm:ss", Locale.getDefault());
-        SimpleDateFormat format = new SimpleDateFormat("yyyy년 MM월 dd일", Locale.KOREAN);
-        Log.d("exif", "Attempting to extract EXIF date/time from image at " + imagePath);
         Date datetime = new Date(0); // or initialize to null, if you prefer
         String formatdate = " ";
         try {
@@ -148,9 +150,18 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
                 for (int tag : datetimeTags) {
                     if (directory.containsTag(tag)) {
                         String date = directory.getString(tag);
+                        if(date.isEmpty() || date.length() <= 1 ){
+                            continue;
+                        }
+
+                        //date format EEE MMM dd HH:mm:ss z yyyy / Locale.ENGLISH
+                        if (date.contains("GMT")) {
+                            exifDatetimeFormatDefault.setTimeZone(TimeZone.getTimeZone("GMT"));
+                            datetime = exifDatetimeFormatDefault.parse(directory.getString(tag));
+                        }
 
                         //date format HH:mm:ss:SSS
-                        if (date.length() > 20) {
+                        else if (date.length() > 20) {
                             datetime = exifDatetimeFormatSSS.parse(directory.getString(tag));
                         }
 
@@ -159,7 +170,7 @@ public class ImageDataLoader extends AsyncTaskLoader<ArrayList<ExifImageData>> {
                             datetime = exifDatetimeFormat.parse(directory.getString(tag));
                         }
 
-                        formatdate = format.format(datetime);
+                        formatdate = appDateformat.format(datetime);
 
                         break;
                     }

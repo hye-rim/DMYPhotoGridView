@@ -68,7 +68,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
 
         mRecyclerView = (RecyclerView) findViewById(R.id.main_recycler_view);
         mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
-//        mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
 
         mRecyclerView.setLayoutManager(mGridLayoutManager);
         mRecyclerView.setHasFixedSize(true);
@@ -95,7 +94,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
                             isChangeRowCnt = true;
                             mNowRowCountIndex++;
                             mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
-//                            mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
                             mRecyclerView.setLayoutManager(mGridLayoutManager);
                             updateAdapter();
                             isChangeRowCnt = true;
@@ -106,7 +104,6 @@ public class MainActivity extends BaseActivity implements LoaderManager.LoaderCa
                             isChangeRowCnt = true;
                             mNowRowCountIndex--;
                             mGridLayoutManager = new StickyHeaderGridLayoutManager(ROW_COUNT[mNowRowCountIndex]);
-//                            mGridLayoutManager.setHeaderBottomOverlapMargin(getResources().getDimensionPixelSize(R.dimen.header_shadow_height));
                             mRecyclerView.setLayoutManager(mGridLayoutManager);
                             updateAdapter();
                             isChangeRowCnt = true;
