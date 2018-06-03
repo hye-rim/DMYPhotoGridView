@@ -19,11 +19,15 @@ import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.TreeMap;
 
 /**
  * Created by hyerim on 2018. 5. 17....
@@ -230,8 +234,21 @@ public class ImageDataLoader extends AsyncTaskLoader<GroupingImageData> {
             }
         }
 
-        GroupingImageData groupingImageList = new GroupingImageData(dailyGroup, monthlyGroup, yearGroup);
+        GroupingImageData groupingImageList = new GroupingImageData(
+                sortingImageGroup(dailyGroup),
+                sortingImageGroup(monthlyGroup),
+                sortingImageGroup(yearGroup));
+
         return groupingImageList;
+    }
+
+    private Map<String, ArrayList<ExifImageData>> sortingImageGroup(final Map<String, ArrayList<ExifImageData>> imageGroup) {
+        //최신순으로 sorting
+
+        TreeMap<String, ArrayList<ExifImageData>> sortedMap = new TreeMap<String, ArrayList<ExifImageData>>(Collections.<String>reverseOrder());
+        sortedMap.putAll(imageGroup);
+
+        return sortedMap;
     }
 
     private void registerContentObserver() {
