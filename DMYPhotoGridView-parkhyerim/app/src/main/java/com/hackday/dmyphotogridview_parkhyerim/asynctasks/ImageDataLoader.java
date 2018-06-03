@@ -101,8 +101,6 @@ public class ImageDataLoader extends AsyncTaskLoader<GroupingImageData> {
 
         GroupingImageData groupingImageList = grouping(imageList);
 
-        //TODO: SORTING
-
         return groupingImageList;
     }
 
@@ -110,7 +108,7 @@ public class ImageDataLoader extends AsyncTaskLoader<GroupingImageData> {
     private ArrayList<ExifImageData> loadImages(Uri contentUri, String[] projection, String orderBy, String idCol, String dataCol) {
         final ArrayList<ExifImageData> data = new ArrayList<ExifImageData>();
 
-        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC LIMIT 1000");//orderBy + " DESC"
+        Cursor cursor = getContext().getContentResolver().query(contentUri, projection, null, null, orderBy + " DESC LIMIT 2000");
 
         if (cursor == null) {
             return data;
