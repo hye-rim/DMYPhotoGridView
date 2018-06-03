@@ -2,15 +2,17 @@
 `ExifInterface를 이용한 년,월,일 그룹핑 목록 만들기`
 
 - RecyclerView
-- GridLayoutManager : StickyHeaderGridLayoutManager로 grid 형태로 이미지 보여주
+- ProgressBar
+- GridLayoutManager : StickyHeaderGridLayoutManager로 grid 형태로 이미지 보여주기
 - sticky header : 년/월/일 헤더 표시
-- AsyncTaskLoader : 이미지, 이미지 정보 가져오기
+- AsyncTaskLoader : 이미지 정보 가져오기, Grouping, Sorting
 - Media.Store : uri 가져오기
 - ExifInterface로 Date 가져오기
 
 <br/>
 
 **Pinch Zoom 했을 때 row값 변화**
+
 |Daily|Month|Year|
 |:---:|:---:|:--:|
 |  3  |  5  | 7  |
